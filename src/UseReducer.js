@@ -1,61 +1,79 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect,useReducer } from "react";
+import { act } from "react-dom/test-utils";
+
 const SECURITY_CODE = 'paradigma';
 
-export const UseState = () => {
-    const [state, setState] = useState({
+function UseReducer() {
+    
+    const actionTypes = {
+        confirm: 'CONFIRM',
+        error: 'ERROR',
+        write: 'WRITE',
+        check: 'CHECK',
+        delete: 'DELETE',
+        reset: 'RESET'
+    };
+
+    const reducerObject = (state, payload) => ({
+        [actionTypes.confirm]: {
+            ...state,
+            error: false,
+            loading: false,
+            confirmed: true
+        },
+        [actionTypes.error]: {
+            ...state,
+            error: true,
+            loading: false
+        },
+        [actionTypes.write]: {
+            ...state,
+            value: payload
+        },
+        [actionTypes.check]: {
+            ...state,
+            error: false,
+            loading: true
+        },
+        [actionTypes.delete]: {
+            ...state,
+            deleted: true,
+        },
+        [actionTypes.reset]: {
+            ...state,
+            confirmed: false,
+            deleted: false,
+            value: ''
+        }
+    });
+
+    const reducer = (state, action) => {
+        if(reducerObject(state)[action.type]) {
+            return reducerObject(state, action.payload)[action.type];
+        } else {
+            return state;
+        }
+    }
+    const initialState = {
         value: '',
         error: false,
         loading: false,
         deleted: false,
         confirmed: false
-    });
-    const onConfirm = () => {
-        setState({
-            ...state,
-            error: false,
-            loading: false,
-            confirmed: true
-        });
-    };
+    }
+    const [state, dispatch]  = useReducer(reducer, initialState);
     
-    const onError = () => {
-        setState({
-            ...state,
-            error: true,
-            loading: false
-        });
-    };
+    const onConfirm = () => dispatch({type: actionTypes.confirm});
     
-    const onWrite = (newValue) => {
-        setState({
-            ...state,
-            value: newValue
-        });
-    };
+    const onError = () => dispatch({type: actionTypes.error});
     
-    const onCheck = () => {
-        setState({
-            ...state,
-            error: false,
-            loading: true
-        });
-    };
+    const onWrite = ({target: {value}}) => dispatch({type: actionTypes.write, payload: value});
+    
+    const onCheck = () => dispatch({type: actionTypes.check});
 
-    const onDelete = () => {
-        setState({
-            ...state,
-            deleted: true,
-        })
-    };
+    const onDelete = () => dispatch({type: actionTypes.delete});
 
-    const onReset = () => {
-        setState({
-            ...state,
-            confirmed: false,
-            deleted: false,
-            value: ''
-        })
-    };
+    const onReset = () => dispatch({type: actionTypes.reset});
 
     useEffect(() => {
         if (state.loading) {
@@ -72,7 +90,7 @@ export const UseState = () => {
     if(!state.deleted && !state.confirmed){
         return (
             <div>
-                <h2>Eliminar UseState</h2>
+                <h2>Eliminar UseReducer</h2>
                 <p>Por favor, escribe el código de seguridad.</p>
                 {
                     state.error && (
@@ -87,12 +105,10 @@ export const UseState = () => {
                 <input 
                     placeholder="Código de seguridad"
                     value={state.value}
-                    onChange={(event) => onWrite(event.target.value)}
+                    onChange={ onWrite }
                 />
                 <button
-                    onClick={() => {
-                            onCheck();
-                        }}
+                    onClick={() => onCheck() }
                 >
                     Comprobar
                 </button>
@@ -103,17 +119,12 @@ export const UseState = () => {
             <>
                 <p>Estado de confirmación</p>
                 <button
-                    onClick={() => {
-                        onDelete();
-                    }}
+                    onClick={ onDelete }
                 >
                     Sí
                 </button>
                 <button
-                    onClick={() => {
-                        onReset();
-                    }}
-                >
+                    onClick={onReset}>
                     No
                 </button>
             </>
@@ -122,14 +133,12 @@ export const UseState = () => {
         return (
             <>
                 <p>Eliminado con éxito.</p>
-                <button
-                    onClick={() => {
-                        onReset();
-                    }}
-                >
+                <button onClick={onReset}>
                     Reset
                 </button>
             </>
         );
     }
-};
+}
+
+export {UseReducer};
